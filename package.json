@@ -1,0 +1,14 @@
+{
+  "name": "serojob-fancy-attributes",
+  "version": "1.0.0",
+  "displayName": "Fancy Attributes",
+  "description": "Collection Of Custom Attributes That Extents The Editor Functionality",
+  "unity": "2021.3",
+  "unityRelease": "0b5",
+  "dependencies": {},
+  "author": {
+    "name": "Serkan Ataman",
+    "email": "serkanataman66@gmail.com",
+    "url": "https://github.com/SerkanAtaman"
+  }
+}

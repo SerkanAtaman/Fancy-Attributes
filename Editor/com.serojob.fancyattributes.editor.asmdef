@@ -1,0 +1,18 @@
+{
+    "name": "com.serojob.fancyattributes.editor",
+    "rootNamespace": "",
+    "references": [
+        "com.serojob.fancyattributes.core"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
