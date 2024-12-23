@@ -51,7 +51,7 @@ namespace SeroJob.FancyAttributes.Editor
                 EditorGUI.BeginProperty(selectedRect, label, property);
                 EditorGUI.PropertyField(selectedRect, property, label, true);
                 EditorGUI.EndProperty();
-                EditorGUI.indentLevel++;
+                EditorGUI.indentLevel--;
             }
         }
 
