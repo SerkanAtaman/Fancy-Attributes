@@ -16,6 +16,8 @@ namespace SeroJob.FancyAttributes.Editor
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            if (property.serializedObject.isEditingMultipleObjects) return;
+
             ChildReferenceDropdown dropdown = attribute as ChildReferenceDropdown;
 
             var dropdownRect = position;
@@ -57,6 +59,7 @@ namespace SeroJob.FancyAttributes.Editor
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
+            if (property.serializedObject.isEditingMultipleObjects) return 0f;
             if (property.managedReferenceValue == null) return EditorGUIUtility.singleLineHeight;
 
             return EditorGUI.GetPropertyHeight(property, label, true) + EditorGUIUtility.singleLineHeight;
