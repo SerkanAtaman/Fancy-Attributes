@@ -9,27 +9,45 @@ namespace SeroJob.FancyAttributes.Editor
     [CustomPropertyDrawer(typeof(ChildReferenceDropdown))]
     public class ChildReferenceDropdownDrawer : PropertyDrawer, IDisposable
     {
+        private Type _type = null;
         private Type[] _allChildTypes = null;
         private string[] _childClasNames = null;
         private GUIContent[] _displayedOptions = null;
         private GUIContent _label = null;
+        private string _errorMessage = null;
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             if (property.serializedObject.isEditingMultipleObjects) return;
 
-            ChildReferenceDropdown dropdown = attribute as ChildReferenceDropdown;
+            _type ??= GetSerializedReferenceType(property);
 
-            var dropdownRect = position;
-            dropdownRect.height *= 0.5f;
+            if (_type == null)
+            {
+                property.managedReferenceValue = null;
+                return;
+            }
+
+            if (_type.IsInterface)
+            {
+                _errorMessage = "Interfaces can not be used with ChildReferenceDropdown attribute";
+                ShowError(position);
+                property.managedReferenceValue = null;
+                return;
+            }
+
+            _errorMessage = null;
 
             if (_allChildTypes == null)
             {
-                _allChildTypes = GetAllChildTypes(dropdown.BaseType);
+                _allChildTypes = GetAllChildTypes(_type);
                 _childClasNames = GetClassNames(_allChildTypes);
                 _displayedOptions = GetContentsForClassNames(_childClasNames);
                 _label = new GUIContent("Child Class");
             }
+
+            var dropdownRect = position;
+            dropdownRect.height *= 0.5f;
 
             var currentSelected = GetSelectedReferenceIndex(_childClasNames, property.managedReferenceValue);
             var targetIndex = EditorGUI.Popup(dropdownRect, _label, currentSelected, _displayedOptions);
@@ -60,12 +78,35 @@ namespace SeroJob.FancyAttributes.Editor
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             if (property.serializedObject.isEditingMultipleObjects) return 0f;
-            if (property.managedReferenceValue == null) return EditorGUIUtility.singleLineHeight;
+            if (_errorMessage != null) return EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing;
+            if (property.managedReferenceValue == null) return EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
-            return EditorGUI.GetPropertyHeight(property, label, true) + EditorGUIUtility.singleLineHeight;
+            return EditorGUI.GetPropertyHeight(property, label, true) + EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
         }
 
-        public Type[] GetAllChildTypes(Type baseType)
+        void ShowError(Rect propertyPosition)
+        {
+            EditorGUI.HelpBox(propertyPosition, _errorMessage, MessageType.Error);
+        }
+
+        Type GetSerializedReferenceType(SerializedProperty property)
+        {
+            try
+            {
+                var fieldTypeParts = property.managedReferenceFieldTypename.Split(' ');
+                var assemblyName = fieldTypeParts[0];
+                var typeName = fieldTypeParts[1];
+                var assembly = Assembly.Load(assemblyName);
+                return assembly.GetType(typeName);
+            }
+            catch(Exception e)
+            {
+                Debug.LogException(e);
+                return null;
+            }
+        }
+
+        Type[] GetAllChildTypes(Type baseType)
         {
             return Assembly.GetAssembly(baseType)
                             .GetTypes()
@@ -73,7 +114,7 @@ namespace SeroJob.FancyAttributes.Editor
                             .ToArray();
         }
 
-        public string[] GetClassNames(Type[] types)
+        string[] GetClassNames(Type[] types)
         {
             string[] classNames = new string[types.Length + 1];
             for (int i = 1; i <= types.Length; i++)
@@ -84,7 +125,7 @@ namespace SeroJob.FancyAttributes.Editor
             return classNames;
         }
 
-        public int GetSelectedReferenceIndex(string[] content, object selected)
+        int GetSelectedReferenceIndex(string[] content, object selected)
         {
             if (selected == null) return 0;
             if (content == null) return 0;
@@ -102,7 +143,7 @@ namespace SeroJob.FancyAttributes.Editor
             return 0;
         }
 
-        public static GUIContent[] GetContentsForClassNames(string[] names)
+        static GUIContent[] GetContentsForClassNames(string[] names)
         {
             var result = new GUIContent[names.Length];
             for (int i = 0; i < result.Length; i++)

@@ -1,20 +1,12 @@
-using System;
 using UnityEngine;
 
 namespace SeroJob.FancyAttributes
 {
-    public class ChildReferenceDropdown : PropertyAttribute, IDisposable
+    public class ChildReferenceDropdown : PropertyAttribute
     {
-        public Type BaseType;
-
-        public ChildReferenceDropdown(Type type)
+        public ChildReferenceDropdown()
         {
-            BaseType = type;
-        }
 
-        public void Dispose()
-        {
-            BaseType = null;
         }
     }
 }
