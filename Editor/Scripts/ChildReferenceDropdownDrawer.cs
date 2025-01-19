@@ -47,7 +47,7 @@ namespace SeroJob.FancyAttributes.Editor
             }
 
             var dropdownRect = position;
-            dropdownRect.height *= 0.5f;
+            dropdownRect.height = EditorGUIUtility.singleLineHeight;
 
             var currentSelected = GetSelectedReferenceIndex(_childClasNames, property.managedReferenceValue);
             var targetIndex = EditorGUI.Popup(dropdownRect, _label, currentSelected, _displayedOptions);
