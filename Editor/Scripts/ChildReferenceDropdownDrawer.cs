@@ -3,6 +3,7 @@ using UnityEditor;
 using System;
 using System.Reflection;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace SeroJob.FancyAttributes.Editor
 {
@@ -116,13 +117,17 @@ namespace SeroJob.FancyAttributes.Editor
 
         string[] GetClassNames(Type[] types)
         {
-            string[] classNames = new string[types.Length + 1];
-            for (int i = 1; i <= types.Length; i++)
+            List<string> result = new();
+
+            for (int i = 0; i < types.Length; i++)
             {
-                classNames[i] = types[i - 1].Name;
+                result.Add(types[i].Name);
             }
-            classNames[0] = "None";
-            return classNames;
+
+            result.Sort(StringComparer.OrdinalIgnoreCase);
+            result.Insert(0, "None");
+
+            return result.ToArray();
         }
 
         int GetSelectedReferenceIndex(string[] content, object selected)
