@@ -4,10 +4,9 @@ using System;
 
 namespace SeroJob.FancyAttributes.Editor
 {
-    [CustomPropertyDrawer(typeof(ChildReferenceDropdown))]
-    public class ChildReferenceDropdownDrawer : PropertyDrawer, IDisposable
+    [CustomPropertyDrawer(typeof(TypeReferenceDropdown))]
+    public class TypeReferenceDropdownDrawer : PropertyDrawer, IDisposable
     {
-        private Type _type = null;
         private Type[] _allChildTypes = null;
         private string[] _childClasNames = null;
         private GUIContent[] _displayedOptions = null;
@@ -18,15 +17,19 @@ namespace SeroJob.FancyAttributes.Editor
         {
             if (property.serializedObject.isEditingMultipleObjects) return;
 
-            _type ??= FancyAttributesEditorUtils.GetSerializedReferenceType(property);
+            EditorGUI.BeginProperty(position, label, property);
 
-            if (_type == null)
+            var typeReferenceAttribute = attribute as TypeReferenceDropdown;
+
+            if (typeReferenceAttribute.BaseType == null)
             {
+                _errorMessage = "There is no valid BaseType provided for TypeReferenceDropdown";
+                ShowError(position);
                 property.managedReferenceValue = null;
                 return;
             }
 
-            if (_type.IsInterface)
+            if (typeReferenceAttribute.BaseType.IsInterface)
             {
                 _errorMessage = "Interfaces can not be used with ChildReferenceDropdown attribute";
                 ShowError(position);
@@ -38,10 +41,10 @@ namespace SeroJob.FancyAttributes.Editor
 
             if (_allChildTypes == null)
             {
-                _allChildTypes = FancyAttributesEditorUtils.GetAllChildTypes(_type);
+                _allChildTypes = FancyAttributesEditorUtils.GetAllChildTypes(typeReferenceAttribute.BaseType);
                 _childClasNames = FancyAttributesEditorUtils.GetClassNames(_allChildTypes);
                 _displayedOptions = GetContentsForClassNames(_childClasNames);
-                _label = new GUIContent("Child Class");
+                _label = new GUIContent(property.displayName);
             }
 
             var dropdownRect = position;
@@ -49,37 +52,24 @@ namespace SeroJob.FancyAttributes.Editor
 
             var currentSelected = GetSelectedReferenceIndex(_childClasNames, property.managedReferenceValue);
             var targetIndex = EditorGUI.Popup(dropdownRect, _label, currentSelected, _displayedOptions);
-
+            
             if (targetIndex == 0)
             {
                 property.managedReferenceValue = null;
             }
             else if (targetIndex != currentSelected)
             {
-                property.managedReferenceValue = Activator.CreateInstance(_allChildTypes[targetIndex - 1]);
+                property.managedReferenceValue = new TypeReference(_allChildTypes[targetIndex - 1]);
             }
 
-            if (property.managedReferenceValue != null)
-            {
-                EditorGUI.indentLevel++;
-                var selectedRect = position;
-                selectedRect.height *= 0.5f;
-                selectedRect.position += new Vector2(0, EditorGUIUtility.singleLineHeight);
-
-                EditorGUI.BeginProperty(selectedRect, label, property);
-                EditorGUI.PropertyField(selectedRect, property, label, true);
-                EditorGUI.EndProperty();
-                EditorGUI.indentLevel--;
-            }
+            EditorGUI.EndProperty();
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             if (property.serializedObject.isEditingMultipleObjects) return 0f;
-            if (_errorMessage != null) return EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing;
-            if (property.managedReferenceValue == null) return EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
-            return EditorGUI.GetPropertyHeight(property, label, true) + EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            return EditorGUIUtility.singleLineHeight;
         }
 
         void ShowError(Rect propertyPosition)
@@ -87,16 +77,17 @@ namespace SeroJob.FancyAttributes.Editor
             EditorGUI.HelpBox(propertyPosition, _errorMessage, MessageType.Error);
         }
 
-        int GetSelectedReferenceIndex(string[] content, object selected)
+        int GetSelectedReferenceIndex(string[] content, object managedReferenceValue)
         {
-            if (selected == null) return 0;
+            if (managedReferenceValue == null) return 0;
             if (content == null) return 0;
 
-            string selectedName = selected.GetType().Name;
+            var reference = (TypeReference)managedReferenceValue;
+            var selectedTypeName = reference.TargetType.Name;
 
             for (int i = 0; i < content.Length; i++)
             {
-                if (string.Equals(selectedName, content[i]))
+                if (string.Equals(selectedTypeName, content[i]))
                 {
                     return i;
                 }
