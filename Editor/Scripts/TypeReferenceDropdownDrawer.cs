@@ -59,7 +59,7 @@ namespace SeroJob.FancyAttributes.Editor
             }
             else if (targetIndex != currentSelected)
             {
-                property.managedReferenceValue = new TypeReference(_allChildTypes[targetIndex - 1]);
+                property.managedReferenceValue = new TypeReference(_allChildTypes[targetIndex - 1].Assembly.GetType(_allChildTypes[targetIndex - 1].Name));
             }
 
             EditorGUI.EndProperty();
@@ -83,6 +83,9 @@ namespace SeroJob.FancyAttributes.Editor
             if (content == null) return 0;
 
             var reference = (TypeReference)managedReferenceValue;
+
+            if (reference.TargetType == null) return 0;
+
             var selectedTypeName = reference.TargetType.Name;
 
             for (int i = 0; i < content.Length; i++)
