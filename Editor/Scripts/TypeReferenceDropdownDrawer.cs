@@ -49,7 +49,7 @@ namespace SeroJob.FancyAttributes.Editor
             dropdownRect.height = EditorGUIUtility.singleLineHeight;
 
             var currentSelected = GetSelectedReferenceIndex(_childClasNames, property.managedReferenceValue);
-            var targetIndex = EditorGUI.Popup(dropdownRect, new GUIContent(property.displayName), currentSelected, _displayedOptions);
+            var targetIndex = EditorGUI.Popup(dropdownRect, new GUIContent("Target Type"), currentSelected, _displayedOptions);
             
             if (targetIndex <= 0)
             {
@@ -98,6 +98,19 @@ namespace SeroJob.FancyAttributes.Editor
             return 0;
         }
 
+        static string GetDisplayNameFromFullName(string fullName)
+        {
+            try
+            {
+                var parts = fullName.Split(".");
+                return parts[^1];
+            }
+            catch
+            {
+                return fullName;
+            }
+        }
+
         static GUIContent[] GetContentsForClassNames(string[] names)
         {
             var result = new GUIContent[names.Length];
@@ -105,7 +118,7 @@ namespace SeroJob.FancyAttributes.Editor
             {
                 result[i] = new GUIContent()
                 {
-                    text = names[i]
+                    text = GetDisplayNameFromFullName(names[i])
                 };
             }
 
