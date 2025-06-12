@@ -48,5 +48,19 @@ namespace SeroJob.FancyAttributes.Editor
 
             return result.ToArray();
         }
+
+        public static string[] GetFullClassNames(Type[] types)
+        {
+            List<string> result = new();
+
+            for (int i = 0; i < types.Length; i++)
+            {
+                result.Add(types[i].FullName);
+            }
+
+            result.Insert(0, "None");
+
+            return result.ToArray();
+        }
     }
 }

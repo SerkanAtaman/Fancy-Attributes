@@ -7,10 +7,9 @@ namespace SeroJob.FancyAttributes.Editor
     [CustomPropertyDrawer(typeof(TypeReferenceDropdown))]
     public class TypeReferenceDropdownDrawer : PropertyDrawer, IDisposable
     {
-        private Type[] _allChildTypes = null;
-        private string[] _childClasNames = null;
-        private GUIContent[] _displayedOptions = null;
-        private GUIContent _label = null;
+        private static Type[] _allChildTypes = null;
+        private static string[] _childClasNames = null;
+        private static GUIContent[] _displayedOptions = null;
         private string _errorMessage = null;
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -42,24 +41,24 @@ namespace SeroJob.FancyAttributes.Editor
             if (_allChildTypes == null)
             {
                 _allChildTypes = FancyAttributesEditorUtils.GetAllChildTypes(typeReferenceAttribute.BaseType);
-                _childClasNames = FancyAttributesEditorUtils.GetClassNames(_allChildTypes);
+                _childClasNames = FancyAttributesEditorUtils.GetFullClassNames(_allChildTypes);
                 _displayedOptions = GetContentsForClassNames(_childClasNames);
-                _label = new GUIContent(property.displayName);
             }
 
             var dropdownRect = position;
             dropdownRect.height = EditorGUIUtility.singleLineHeight;
 
             var currentSelected = GetSelectedReferenceIndex(_childClasNames, property.managedReferenceValue);
-            var targetIndex = EditorGUI.Popup(dropdownRect, _label, currentSelected, _displayedOptions);
+            var targetIndex = EditorGUI.Popup(dropdownRect, new GUIContent(property.displayName), currentSelected, _displayedOptions);
             
-            if (targetIndex == 0)
+            if (targetIndex <= 0)
             {
-                property.managedReferenceValue = null;
+                property.managedReferenceValue ??= new TypeReference();
+                ((TypeReference)property.managedReferenceValue).Clear();
             }
             else if (targetIndex != currentSelected)
             {
-                property.managedReferenceValue = new TypeReference(_allChildTypes[targetIndex - 1].Assembly.GetType(_allChildTypes[targetIndex - 1].Name));
+                property.managedReferenceValue = new TypeReference(_allChildTypes[targetIndex - 1].FullName);
             }
 
             EditorGUI.EndProperty();
@@ -84,9 +83,9 @@ namespace SeroJob.FancyAttributes.Editor
 
             var reference = (TypeReference)managedReferenceValue;
 
-            if (reference.TargetType == null) return 0;
+            if (string.IsNullOrWhiteSpace(reference.TypeFullName)) return 0;
 
-            var selectedTypeName = reference.TargetType.Name;
+            var selectedTypeName = reference.TypeFullName;
 
             for (int i = 0; i < content.Length; i++)
             {
@@ -118,7 +117,6 @@ namespace SeroJob.FancyAttributes.Editor
             _allChildTypes = null;
             _childClasNames = null;
             _displayedOptions = null;
-            _label = null;
         }
     }
 }
